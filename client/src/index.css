@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-pokemon-darker text-white font-sans;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #root {
+    height: 100vh;
+    width: 100vw;
+  }
+}
+
+@layer components {
+  .pokemon-panel {
+    @apply bg-pokemon-panel border border-pokemon-border rounded-xl;
+  }
+
+  .pokemon-btn {
+    @apply bg-pokemon-blue hover:bg-blue-600 active:scale-95 transition-all duration-150
+           text-white font-pixel text-xs px-4 py-2 rounded-lg cursor-pointer
+           border border-blue-400 shadow-lg shadow-blue-900/30;
+  }
+
+  .pokemon-btn-red {
+    @apply bg-pokemon-red hover:bg-red-600 active:scale-95 transition-all duration-150
+           text-white font-pixel text-xs px-4 py-2 rounded-lg cursor-pointer
+           border border-red-400 shadow-lg shadow-red-900/30;
+  }
+
+  .pokemon-btn-yellow {
+    @apply bg-pokemon-yellow hover:bg-yellow-400 active:scale-95 transition-all duration-150
+           text-pokemon-dark font-pixel text-xs px-4 py-2 rounded-lg cursor-pointer
+           border border-yellow-300 shadow-lg shadow-yellow-900/30;
+  }
+
+  .hp-bar {
+    @apply h-3 rounded-full transition-all duration-700 ease-in-out relative overflow-hidden;
+  }
+
+  .hp-bar::after {
+    content: '';
+    @apply absolute inset-0 bg-white/20 rounded-full;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+  }
+
+  .type-badge {
+    @apply text-xs font-pixel px-2 py-0.5 rounded-full uppercase tracking-wider;
+  }
+
+  .battle-log-entry {
+    @apply animate-fadeIn text-sm leading-relaxed;
+  }
+}

@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creatures       PlayerCreature[]
+  inventoryItems  InventoryItem[]
+  battlesAsPlayer1 BattleResult[] @relation("Player1")
+  battlesAsPlayer2 BattleResult[] @relation("Player2")
+}
+
+model Creature {
+  id        String @id @default(cuid())
+  name      String @unique
+  type1     String
+  type2     String?
+  baseHp    Int
+  baseAtk   Int
+  baseDef   Int
+  baseSpAtk Int
+  baseSpDef Int
+  baseSpd   Int
+  spriteKey String // key used by client to look up sprite
+
+  moves          CreatureMove[]
+  playerCreatures PlayerCreature[]
+}
+
+model Move {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  type        String
+  category    String  // "physical" | "special" | "status"
+  power       Int?
+  accuracy    Int
+  pp          Int
+  effect      String? // e.g. "BURN_10" – server parses this
+  description String
+
+  creatureMoves CreatureMove[]
+}
+
+model CreatureMove {
+  id         String   @id @default(cuid())
+  creature   Creature @relation(fields: [creatureId], references: [id])
+  creatureId String
+  move       Move     @relation(fields: [moveId], references: [id])
+  moveId     String
+  learnLevel Int
+
+  @@unique([creatureId, moveId])
+}
+
+model PlayerCreature {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  creature   Creature @relation(fields: [creatureId], references: [id])
+  creatureId String
+  nickname   String?
+  level      Int      @default(5)
+  xp         Int      @default(0)
+  currentHp  Int
+  maxHp      Int
+  isLead     Boolean  @default(false) // which creature is sent to battle first
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model InventoryItem {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  itemName String
+  quantity Int    @default(1)
+
+  @@unique([userId, itemName])
+}
+
+model BattleResult {
+  id         String   @id @default(cuid())
+  player1    User     @relation("Player1", fields: [player1Id], references: [id])
+  player1Id  String
+  player2    User     @relation("Player2", fields: [player2Id], references: [id])
+  player2Id  String
+  winnerId   String?  // null if draw / both disconnect
+  xpAwarded  Int      @default(0)
+  turnsCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([player1Id])
+  @@index([player2Id])
+}

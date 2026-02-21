@@ -1,7 +1,7 @@
 import { useAuthStore } from './store/authStore'
 import { useBattleStore } from './store/battleStore'
 import LoginPage from './components/LoginPage'
-import LobbyPage from './components/LobbyPage'
+import PhaserGame from './components/PhaserGame'
 import BattleUI from './components/BattleUI'
 import { useEffect } from 'react'
 
@@ -15,12 +15,18 @@ export default function App() {
 
     if (!isLoggedIn) return <LoginPage />
 
-    // Battle overlays (incoming challenge, waiting, active battle, ended) all live in BattleUI
     const showBattleUI = phase !== 'idle'
 
     return (
-        <div className="relative h-screen w-screen overflow-hidden">
-            {showBattleUI ? <BattleUI /> : <LobbyPage />}
+        <div className="relative h-screen w-screen overflow-hidden bg-black">
+            {/* Phaser game always mounted when logged in */}
+            <PhaserGame />
+            {/* Battle UI overlays Phaser when active */}
+            {showBattleUI && (
+                <div className="absolute inset-0 z-50">
+                    <BattleUI />
+                </div>
+            )}
         </div>
     )
 }

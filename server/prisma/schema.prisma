@@ -22,6 +22,19 @@ model User {
   inventoryItems  InventoryItem[]
   battlesAsPlayer1 BattleResult[] @relation("Player1")
   battlesAsPlayer2 BattleResult[] @relation("Player2")
+  storyFlags       StoryFlags?
+}
+
+model StoryFlags {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visitedMom   Boolean  @default(false)
+  metOak       Boolean  @default(false)
+  hasStarter   Boolean  @default(false)
+  starterChosen String? // "flameling" | "aquafin" | "verdling"
+  metGary      Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
 }
 
 model Creature {
@@ -37,8 +50,7 @@ model Creature {
   baseSpd   Int
   spriteKey String // key used by client to look up sprite
 
-  moves          CreatureMove[]
-  playerCreatures PlayerCreature[]
+  creatureMoves CreatureMove[]
 }
 
 model Move {
@@ -67,18 +79,17 @@ model CreatureMove {
 }
 
 model PlayerCreature {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  creature   Creature @relation(fields: [creatureId], references: [id])
-  creatureId String
-  nickname   String?
-  level      Int      @default(5)
-  xp         Int      @default(0)
-  currentHp  Int
-  maxHp      Int
-  isLead     Boolean  @default(false) // which creature is sent to battle first
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  creatureId  String   // creature key e.g. 'flameling' — resolved from in-memory CREATURES data
+  nickname    String?
+  level       Int      @default(5)
+  xp          Int      @default(0)
+  currentHp   Int
+  maxHp       Int
+  isLead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   @@index([userId])
 }

@@ -118,6 +118,23 @@ export function registerOverworldNamespace(io: Server) {
             socket.emit('route:ack', { nextMap: 'route1' })
         })
 
+        // ── chat:send — relay message to target player ────────────────────────
+        socket.on('chat:send', async ({ targetUserId, message }: { targetUserId: string; message: string }) => {
+            if (!message || typeof message !== 'string' || message.length > 200) return
+            const targetSession = await redis.hgetall(sessionKey(targetUserId))
+            if (!targetSession?.socketId) return
+            // Only relay if both players are in the same map
+            const mySession = await redis.hgetall(sessionKey(userId))
+            if (!mySession?.mapId || mySession.mapId !== targetSession.mapId) return
+            const targetSocket = nsp.sockets.get(targetSession.socketId as string)
+            targetSocket?.emit('chat:message', {
+                fromUserId: userId,
+                fromUsername: username,
+                message: message.trim().slice(0, 200),
+                timestamp: Date.now(),
+            })
+        })
+
         // ── disconnect ───────────────────────────────────────────────────────
         socket.on('disconnect', async () => {
             await removeSession(userId, currentMapId)

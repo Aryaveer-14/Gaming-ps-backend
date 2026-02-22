@@ -53,6 +53,26 @@ export const MOVES: MoveDef[] = [
     // Status
     { id: 'growl', name: 'Growl', type: 'Normal', category: 'status', accuracy: 100, pp: 40, effect: 'DEF_DOWN', description: 'Lower foe\'s attack.' },
     { id: 'sand_attack', name: 'Sand Attack', type: 'Ground', category: 'status', accuracy: 100, pp: 15, effect: 'ACC_DOWN', description: 'Reduces foe\'s accuracy.' },
+    // Poison
+    { id: 'poison_sting', name: 'Poison Sting', type: 'Poison', category: 'physical', power: 15, accuracy: 100, pp: 35, description: 'May poison the foe.' },
+    { id: 'acid', name: 'Acid', type: 'Poison', category: 'special', power: 40, accuracy: 100, pp: 30, description: 'May lower foe\'s Sp.Def.' },
+    { id: 'sludge_bomb', name: 'Sludge Bomb', type: 'Poison', category: 'special', power: 90, accuracy: 100, pp: 10, description: 'May poison the foe.' },
+    { id: 'wrap', name: 'Wrap', type: 'Normal', category: 'physical', power: 15, accuracy: 90, pp: 20, description: 'Wraps and squeezes for 4-5 turns.' },
+    // Meowth moves
+    { id: 'scratch', name: 'Scratch', type: 'Normal', category: 'physical', power: 40, accuracy: 100, pp: 35, description: 'Scratches with sharp claws.' },
+    { id: 'bite', name: 'Bite', type: 'Normal', category: 'physical', power: 60, accuracy: 100, pp: 25, description: 'May cause flinching.' },
+    { id: 'fury_swipes', name: 'Fury Swipes', type: 'Normal', category: 'physical', power: 18, accuracy: 80, pp: 15, description: 'Hits 2-5 times in a row.' },
+    { id: 'pay_day', name: 'Pay Day', type: 'Normal', category: 'physical', power: 40, accuracy: 100, pp: 20, description: 'Coins scatter after hitting.' },
+    // Koffing moves
+    { id: 'smog', name: 'Smog', type: 'Poison', category: 'special', power: 30, accuracy: 70, pp: 20, description: 'May poison the foe.' },
+    { id: 'self_destruct', name: 'Self-Destruct', type: 'Normal', category: 'physical', power: 200, accuracy: 100, pp: 5, description: 'Faints user. Huge damage.' },
+    // KADS (Legendary — Psychic)
+    { id: 'psywave', name: 'Psywave', type: 'Psychic', category: 'special', power: 70, accuracy: 100, pp: 15, description: 'A wave of telekinetic force.' },
+    { id: 'psychic', name: 'Psychic', type: 'Psychic', category: 'special', power: 90, accuracy: 100, pp: 10, effect: 'SP_DEF_DOWN_10', description: 'Powerful telekinesis. May lower Sp.Def.' },
+    { id: 'shadow_ball', name: 'Shadow Ball', type: 'Ghost', category: 'special', power: 80, accuracy: 100, pp: 15, description: 'A shadowy blob. May lower Sp.Def.' },
+    { id: 'aura_sphere', name: 'Aura Sphere', type: 'Fighting', category: 'special', power: 80, accuracy: 100, pp: 20, description: 'A blast of aura energy. Never misses.' },
+    { id: 'recover', name: 'Recover', type: 'Normal', category: 'status', accuracy: 100, pp: 10, effect: 'HEAL_50', description: 'Restores up to half of max HP.' },
+    { id: 'future_sight', name: 'Future Sight', type: 'Psychic', category: 'special', power: 120, accuracy: 100, pp: 10, description: 'Foreseen psychic attack hits later.' },
 ]
 
 // ─── Creatures ────────────────────────────────────────────────────────────────
@@ -98,6 +118,41 @@ export const CREATURES: CreatureDef[] = [
         baseHp: 70, baseAtk: 80, baseDef: 85, baseSpAtk: 45, baseSpDef: 55, baseSpd: 30,
         spriteKey: 'stonebear',
         moves: ['tackle', 'sand_attack', 'hyper_beam', 'growl'],
+    },
+    // ── Team Rocket Creatures ─────────────────────────────────────────────
+    {
+        id: 'snekob',
+        name: 'Snekob',
+        type1: 'Poison',
+        baseHp: 35, baseAtk: 60, baseDef: 44, baseSpAtk: 40, baseSpDef: 54, baseSpd: 55,
+        spriteKey: 'snekob',
+        moves: ['wrap', 'poison_sting', 'acid', 'bite'],
+    },
+    {
+        id: 'smogon',
+        name: 'Smogon',
+        type1: 'Poison',
+        baseHp: 40, baseAtk: 65, baseDef: 95, baseSpAtk: 60, baseSpDef: 45, baseSpd: 35,
+        spriteKey: 'smogon',
+        moves: ['tackle', 'smog', 'sludge_bomb', 'self_destruct'],
+    },
+    {
+        id: 'meowth',
+        name: 'Meowth',
+        type1: 'Normal',
+        baseHp: 40, baseAtk: 45, baseDef: 35, baseSpAtk: 40, baseSpDef: 40, baseSpd: 90,
+        spriteKey: 'meowth',
+        moves: ['scratch', 'bite', 'fury_swipes', 'pay_day'],
+    },
+    // ── Legendary ─────────────────────────────────────────────────────
+    {
+        id: 'kads',
+        name: 'KADS',
+        type1: 'Dragon',
+        type2: 'Steel',
+        baseHp: 106, baseAtk: 110, baseDef: 90, baseSpAtk: 154, baseSpDef: 90, baseSpd: 130,
+        spriteKey: 'kads',
+        moves: ['psychic', 'aura_sphere', 'shadow_ball', 'recover'],
     },
 ]
 

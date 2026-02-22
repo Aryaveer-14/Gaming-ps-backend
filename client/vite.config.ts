@@ -11,10 +11,11 @@ export default defineConfig({
     },
     server: {
         port: 5173,
+        host: true,
         proxy: {
-            '/auth': 'http://localhost:3001',
+            '/auth': 'http://192.168.0.130:3001',
             '/socket.io': {
-                target: 'http://localhost:3001',
+                target: 'http://192.168.0.130:3001',
                 ws: true,
             },
         },

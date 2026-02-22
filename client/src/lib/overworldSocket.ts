@@ -16,13 +16,22 @@ export interface WorldSnapshot {
     players: PlayerSnapshot[]
 }
 
+export interface ChatMessage {
+    fromUserId:   string
+    fromUsername:  string
+    message:       string
+    timestamp:     number
+}
+
 type SnapshotCallback = (snap: WorldSnapshot) => void
+type ChatCallback     = (msg: ChatMessage) => void
 
 // ─── Singleton ────────────────────────────────────────────────────────────────
 
 class OverworldSocket {
     private socket: Socket | null = null
     private _onSnapshot: SnapshotCallback | null = null
+    private _onChatMessage: ChatCallback | null = null
 
     connect(token: string) {
         if (this.socket?.connected) return
@@ -35,6 +44,10 @@ class OverworldSocket {
 
         this.socket.on('world:snapshot', (snap: WorldSnapshot) => {
             this._onSnapshot?.(snap)
+        })
+
+        this.socket.on('chat:message', (msg: ChatMessage) => {
+            this._onChatMessage?.(msg)
         })
 
         this.socket.on('connect_error', (err) => {
@@ -50,12 +63,20 @@ class OverworldSocket {
         this.socket?.emit('player:move', { x, y })
     }
 
+    sendChat(targetUserId: string, message: string) {
+        this.socket?.emit('chat:send', { targetUserId, message })
+    }
+
     enterRoute(fromMap: string) {
         this.socket?.emit('enterRoute', { fromMap })
     }
 
     set onSnapshot(cb: SnapshotCallback | null) {
         this._onSnapshot = cb
+    }
+
+    set onChatMessage(cb: ChatCallback | null) {
+        this._onChatMessage = cb
     }
 
     disconnect() {

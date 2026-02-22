@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -34,6 +34,7 @@ model StoryFlags {
   hasStarter   Boolean  @default(false)
   starterChosen String? // "flameling" | "aquafin" | "verdling"
   metGary      Boolean  @default(false)
+  money        Int      @default(3000)
   updatedAt    DateTime @updatedAt
 }
 

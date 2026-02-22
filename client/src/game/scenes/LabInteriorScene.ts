@@ -6,24 +6,28 @@ import { setStoryFlag } from '../../lib/overworldSocket'
 const W = 800, H = 576, SPD = 110
 
 const POKEBALLS = [
-    { x: 260, y: 240, id: 'flameling', name: 'Flameling', type: 'Fire',  color: 0xff4422 },
-    { x: 400, y: 240, id: 'aquafin',   name: 'Aquafin',   type: 'Water', color: 0x2266ff },
-    { x: 540, y: 240, id: 'verdling',  name: 'Verdling',  type: 'Grass', color: 0x33bb44 },
+    { x: 260, y: 240, id: 'flameling', name: 'Flameling', type: 'Fire',  color: 0xff4422, texKey: 'obj_pokeball_fire'  },
+    { x: 400, y: 240, id: 'aquafin',   name: 'Aquafin',   type: 'Water', color: 0x2266ff, texKey: 'obj_pokeball_water' },
+    { x: 540, y: 240, id: 'verdling',  name: 'Verdling',  type: 'Grass', color: 0x33bb44, texKey: 'obj_pokeball_grass' },
 ]
 
 export default class LabInteriorScene extends Phaser.Scene {
     // @ts-ignore
-    private player!:     Phaser.Physics.Arcade.Sprite
-    private cursors!:    Phaser.Types.Input.Keyboard.CursorKeys
-    private spaceKey!:   Phaser.Input.Keyboard.Key
-    private dialogue!:   DialogueSystem
-    private oakZone!:    Phaser.GameObjects.Zone
-    private doorZone!:   Phaser.GameObjects.Zone
-    private ballZones:   { zone: Phaser.GameObjects.Zone; def: typeof POKEBALLS[0] }[] = []
-    private triggered    = false
-    private selecting    = false
-    private garySprite!: Phaser.GameObjects.Rectangle
-    private garyLabel!:  Phaser.GameObjects.Text
+    private player!:       Phaser.Physics.Arcade.Sprite
+    private playerSprite!: Phaser.GameObjects.Image
+    private playerDir      = 'down'
+    private playerFrame    = 0
+    private walkTimer      = 0
+    private cursors!:      Phaser.Types.Input.Keyboard.CursorKeys
+    private spaceKey!:     Phaser.Input.Keyboard.Key
+    private dialogue!:     DialogueSystem
+    private oakZone!:      Phaser.GameObjects.Zone
+    private doorZone!:     Phaser.GameObjects.Zone
+    private ballZones:     { zone: Phaser.GameObjects.Zone; def: typeof POKEBALLS[0] }[] = []
+    private triggered      = false
+    private selecting      = false
+    private garySprite!:   Phaser.GameObjects.Image
+    private garyLabel!:    Phaser.GameObjects.Text
 
     constructor() { super({ key: 'LabInterior' }) }
 
@@ -37,66 +41,66 @@ export default class LabInteriorScene extends Phaser.Scene {
         this.spaceKey  = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
         this.physics.world.setBounds(0, 0, W, H)
 
-        const g = this.add.graphics()
-
-        // Floor tiles
-        g.fillStyle(0xccccbb).fillRect(0, 0, W, H)
-        g.lineStyle(1, 0xbbbbaa, 0.4)
-        for (let gx = 0; gx < W; gx += 32) g.lineBetween(gx, 0, gx, H)
-        for (let gy = 0; gy < H; gy += 32) g.lineBetween(0, gy, W, gy)
-
+        // ── Floor tiles (lab grid) ────────────────────────────────────────
+        for (let y = 80; y < H; y += 32) {
+            for (let x = 0; x < W; x += 32) {
+                this.add.image(x, y, 'tile_floor_lab').setOrigin(0).setDisplaySize(32, 32).setDepth(0)
+            }
+        }
         // Walls
-        g.fillStyle(0xeeeecc).fillRect(0, 0, W, 80)
+        for (let x = 0; x < W; x += 32) {
+            this.add.image(x, 0, 'tile_wall_lab').setOrigin(0).setDisplaySize(32, 80).setDepth(0)
+        }
+        // Ceiling strip
+        const g = this.add.graphics()
         g.fillStyle(0xaaaacc).fillRect(0, 0, W, 8)
 
-        // Lab table
-        g.fillStyle(0x888877).fillRect(180, 190, 440, 16)
-        g.fillStyle(0xccccaa).fillRect(182, 166, 436, 26)
+        // Lab table (sprite)
+        this.add.image(W / 2, 183, 'furn_lab_table').setDisplaySize(440, 16).setDepth(1)
 
-        // Pokéballs
+        // Pokéballs (sprites)
         POKEBALLS.forEach(b => {
-            g.fillStyle(0xffffff).fillCircle(b.x, b.y, 16)
-            g.fillStyle(b.color).fillCircle(b.x, b.y - 8, 16)
-            g.fillStyle(0x000000).fillRect(b.x - 16, b.y - 2, 32, 4)
-            g.fillStyle(0xffffff).fillCircle(b.x, b.y, 5)
+            this.add.image(b.x, b.y, b.texKey).setDisplaySize(32, 32).setDepth(2)
             this.add.text(b.x, b.y + 28, `${b.name}\n[${b.type}]`, {
                 fontSize: '9px', color: '#333', fontFamily: 'monospace', align: 'center',
-            }).setOrigin(0.5)
+            }).setOrigin(0.5).setDepth(2)
             const zone = this.add.zone(b.x, b.y, 36, 36).setOrigin(0.5)
             this.physics.add.existing(zone, true)
             this.ballZones.push({ zone, def: b })
         })
 
-        // Lab shelves
-        g.fillStyle(0x886644).fillRect(20, 80, 120, 80)
-        g.fillStyle(0xaaffbb).fillRect(28, 88, 20, 30)
-        g.fillStyle(0xffffaa).fillRect(54, 88, 20, 30)
-        g.fillStyle(0x886644).fillRect(W - 140, 80, 120, 80)
-        g.fillStyle(0x333344).fillRect(W - 130, 84, 80, 50)
-        g.fillStyle(0x5588ff).fillRect(W - 128, 86, 76, 46)
+        // Lab shelves (left — beakers)
+        this.add.image(80, 120, 'furn_lab_shelf').setDisplaySize(120, 80).setDepth(1)
+        // Lab shelves (right — computer)
+        this.add.image(W - 80, 110, 'furn_lab_computer').setDisplaySize(80, 50).setDepth(1)
 
-        // Oak NPC
+        // Oak NPC (sprite)
         const oakX = W / 2, oakY = 120
-        this.add.rectangle(oakX, oakY, 14, 20, 0x5566aa).setDepth(2)
-        this.add.text(oakX, oakY - 18, 'Prof. Oak', { fontSize: '9px', color: '#334', fontFamily: 'monospace' }).setOrigin(0.5)
+        this.add.image(oakX, oakY, 'npc_oak').setDisplaySize(28, 42).setDepth(3)
+        this.add.text(oakX, oakY - 24, 'Prof. Oak', {
+            fontSize: '9px', color: '#334', fontFamily: 'monospace',
+        }).setOrigin(0.5).setDepth(3)
         this.oakZone = this.add.zone(oakX, oakY, 48, 48).setOrigin(0.5)
         this.physics.add.existing(this.oakZone, true)
 
-        // Gary (off-screen right, slides in during cutscene)
-        this.garySprite = this.add.rectangle(W + 50, 340, 14, 20, 0x2244bb).setDepth(3)
-        this.garyLabel  = this.add.text(W + 50, 322, 'Gary', { fontSize: '9px', color: '#2244bb', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(3)
+        // Gary (off-screen right, slides in during cutscene) — sprite
+        this.garySprite = this.add.image(W + 50, 340, 'npc_gary').setDisplaySize(28, 42).setDepth(3)
+        this.garyLabel  = this.add.text(W + 50, 316, 'Gary', {
+            fontSize: '9px', color: '#2244bb', fontFamily: 'monospace',
+        }).setOrigin(0.5).setDepth(3)
 
-        // Door
-        g.fillStyle(0x8b4513).fillRect(W / 2 - 20, H - 24, 40, 24)
+        // Door (sprite)
+        this.add.image(W / 2, H - 12, 'obj_door').setDisplaySize(40, 24).setDepth(1)
         this.doorZone = this.add.zone(W / 2, H - 10, 40, 20).setOrigin(0.5)
         this.physics.add.existing(this.doorZone, true)
 
-        // Player
-        const p = this.add.rectangle(W / 2, H - 80, 14, 20, 0xff4444) as any
+        // Player (sprite)
+        this.playerSprite = this.add.image(W / 2, H - 80, 'player_down_0')
+            .setDisplaySize(28, 42).setDepth(5)
+        const p = this.add.rectangle(W / 2, H - 80, 14, 20, 0xff0000, 0) as any
         this.physics.add.existing(p)
         this.player = p as Phaser.Physics.Arcade.Sprite
         ;(this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true).setSize(14, 20)
-        this.player.setDepth(5)
 
         this.input.on('pointerdown', () => this.dialogue.pointerAdvance())
 
@@ -127,13 +131,22 @@ export default class LabInteriorScene extends Phaser.Scene {
         const body   = this.player.body as Phaser.Physics.Arcade.Body
         body.setVelocity(0)
 
+        let moving = false
         if (!locked) {
             const { left, right, up, down } = this.cursors
-            if (left.isDown)  body.setVelocityX(-SPD)
-            if (right.isDown) body.setVelocityX(SPD)
-            if (up.isDown)    body.setVelocityY(-SPD)
-            if (down.isDown)  body.setVelocityY(SPD)
+            if (left.isDown)  { body.setVelocityX(-SPD); this.playerDir = 'left'; moving = true }
+            if (right.isDown) { body.setVelocityX(SPD); this.playerDir = 'right'; moving = true }
+            if (up.isDown)    { body.setVelocityY(-SPD); this.playerDir = 'up'; moving = true }
+            if (down.isDown)  { body.setVelocityY(SPD); this.playerDir = 'down'; moving = true }
         }
+
+        if (moving) {
+            this.walkTimer += delta
+            if (this.walkTimer > 200) { this.walkTimer = 0; this.playerFrame = this.playerFrame === 0 ? 1 : 0 }
+        } else { this.playerFrame = 0; this.walkTimer = 0 }
+
+        this.playerSprite.setPosition(this.player.x, this.player.y)
+        this.playerSprite.setTexture(`player_${this.playerDir}_${this.playerFrame}`)
 
         if (this.triggered || this.selecting || locked) return
 
@@ -219,7 +232,7 @@ export default class LabInteriorScene extends Phaser.Scene {
                     this.registry.set('metGary', true)
                     const token = this.registry.get('token') as string
                     if (token) setStoryFlag(token, 'metGary')
-                    this.tweens.add({ targets: [this.garySprite, this.garyLabel], x: W + 70, duration: 400, ease: 'Linear' })
+                    this.tweens.add({ targets: [this.garySprite, this.garyLabel], x: W + 70, duration: 400, ease: 'Linear', onComplete: () => { this.selecting = false } })
                 })
             },
         })

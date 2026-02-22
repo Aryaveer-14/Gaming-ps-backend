@@ -82,20 +82,34 @@ function buildFighterState(
 }
 
 async function getLeadCreature(userId: string) {
-    return prisma.playerCreature.findFirst({
+    const pc = await prisma.playerCreature.findFirst({
         where: { userId, isLead: true },
-        include: {
-            creature: {
-                include: {
-                    moves: {
-                        include: { move: true },
-                        orderBy: { learnLevel: 'asc' },
-                        take: 4,
-                    },
-                },
-            },
-        },
     })
+    if (!pc) return null
+
+    const def = CREATURES_MAP[pc.creatureId]
+    if (!def) return null
+
+    // Build a shape matching what buildFighterState expects
+    const moveEntries = def.moves.slice(0, 4).map(mId => {
+        const mDef = MOVES_MAP[mId]
+        return { move: { id: mId, pp: mDef?.pp ?? 20 } }
+    })
+
+    return {
+        ...pc,
+        creature: {
+            id: def.id,
+            name: def.name,
+            type1: def.type1,
+            baseAtk: def.baseAtk,
+            baseDef: def.baseDef,
+            baseSpAtk: def.baseSpAtk,
+            baseSpDef: def.baseSpDef,
+            baseSpd: def.baseSpd,
+            moves: moveEntries,
+        },
+    }
 }
 
 async function endBattle(

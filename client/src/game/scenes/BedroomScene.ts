@@ -6,11 +6,15 @@ const W = 800, H = 576, SPD = 110
 
 export default class BedroomScene extends Phaser.Scene {
     // @ts-ignore
-    private player!:   Phaser.Physics.Arcade.Sprite
-    private cursors!:  Phaser.Types.Input.Keyboard.CursorKeys
-    private dialogue!: DialogueSystem
-    private doorZone!: Phaser.GameObjects.Zone
-    private triggered  = false
+    private player!:       Phaser.Physics.Arcade.Sprite
+    private playerSprite!: Phaser.GameObjects.Image
+    private playerDir      = 'down'
+    private playerFrame    = 0
+    private walkTimer      = 0
+    private cursors!:      Phaser.Types.Input.Keyboard.CursorKeys
+    private dialogue!:     DialogueSystem
+    private doorZone!:     Phaser.GameObjects.Zone
+    private triggered      = false
 
     constructor() { super({ key: 'Bedroom' }) }
 
@@ -21,38 +25,45 @@ export default class BedroomScene extends Phaser.Scene {
         this.cursors   = this.input.keyboard!.createCursorKeys()
         this.physics.world.setBounds(0, 0, W, H)
 
-        // ── Draw bedroom ──────────────────────────────────────────────────
+        // ── Draw bedroom with sprites ─────────────────────────────────────
+
+        // Floor tiles
+        for (let y = 80; y < H; y += 32) {
+            for (let x = 0; x < W; x += 32) {
+                this.add.image(x, y, 'tile_floor_wood').setOrigin(0).setDisplaySize(32, 32).setDepth(0)
+            }
+        }
+        // Wall
+        for (let x = 0; x < W; x += 32) {
+            this.add.image(x, 0, 'tile_wall').setOrigin(0).setDisplaySize(32, 80).setDepth(0)
+        }
+        // Ceiling strip
         const g = this.add.graphics()
-        g.fillStyle(0xc8a96e).fillRect(0, 0, W, H)              // floor
-        g.fillStyle(0xc8d8e8).fillRect(0, 0, W, 80)             // wall
-        g.fillStyle(0x8899aa).fillRect(0, 0, W, 8)              // ceiling strip
+        g.fillStyle(0x8899aa).fillRect(0, 0, W, 8)
 
-        // Bed
-        g.fillStyle(0x4466bb).fillRect(40, H - 140, 80, 120)
-        g.fillStyle(0xffffff).fillRect(44, H - 136, 72, 40)
-        g.fillStyle(0x2233aa).fillRect(0, H - 136, 40, 120)
+        // Bed (left side)
+        this.add.image(60, H - 80, 'furn_bed').setDisplaySize(80, 120).setDepth(1)
 
-        // Desk + computer
-        g.fillStyle(0x8b6914).fillRect(W - 140, 100, 120, 60)
-        g.fillStyle(0x444455).fillRect(W - 130, 80,  80, 24)
-        g.fillStyle(0x88ccff).fillRect(W - 128, 82,  76, 20)
+        // Desk + computer (right side)
+        this.add.image(W - 80, 130, 'furn_desk').setDisplaySize(120, 60).setDepth(1)
+        this.add.image(W - 90, 90, 'furn_computer').setDisplaySize(80, 56).setDepth(2)
 
-        // Bookshelf
-        g.fillStyle(0x6b4c11).fillRect(20, 80, 90, 80)
-        const bookColors = [0xcc3333, 0x3355cc, 0x44aa44, 0xddaa00, 0x9922aa]
-        bookColors.forEach((c, i) => g.fillStyle(c).fillRect(22 + i * 17, 84, 14, 70))
+        // Bookshelf (left wall)
+        this.add.image(65, 120, 'furn_bookshelf').setDisplaySize(90, 80).setDepth(1)
 
         // Door (bottom-center)
-        g.fillStyle(0x8b4513).fillRect(W / 2 - 24, H - 24, 48, 24)
-        g.fillStyle(0xffcc88).fillRect(W / 2 - 22, H - 22, 44, 20)
-        this.add.text(W / 2, H - 12, '▼', { fontSize: '12px', color: '#000', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(2)
+        this.add.image(W / 2, H - 12, 'obj_door').setDisplaySize(48, 24).setDepth(1)
+        this.add.text(W / 2, H - 12, '▼', {
+            fontSize: '12px', color: '#000', fontFamily: 'monospace',
+        }).setOrigin(0.5).setDepth(2)
 
-        // ── Player ────────────────────────────────────────────────────────
-        const p = this.add.rectangle(W / 2, H / 2, 14, 20, 0xff4444) as any
+        // ── Player (sprite) ───────────────────────────────────────────────
+        this.playerSprite = this.add.image(W / 2, H / 2, 'player_down_0')
+            .setDisplaySize(28, 42).setDepth(5)
+        const p = this.add.rectangle(W / 2, H / 2, 14, 20, 0xff0000, 0) as any
         this.physics.add.existing(p)
         this.player = p as Phaser.Physics.Arcade.Sprite
         ;(this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true).setSize(14, 20)
-        this.player.setDepth(5)
 
         // ── Door zone ─────────────────────────────────────────────────────
         this.doorZone = this.add.zone(W / 2, H - 10, 48, 20).setOrigin(0.5)
@@ -81,13 +92,23 @@ export default class BedroomScene extends Phaser.Scene {
         const body   = this.player.body as Phaser.Physics.Arcade.Body
         body.setVelocity(0)
 
+        let moving = false
         if (!locked) {
             const { left, right, up, down } = this.cursors
-            if (left.isDown)  body.setVelocityX(-SPD)
-            if (right.isDown) body.setVelocityX(SPD)
-            if (up.isDown)    body.setVelocityY(-SPD)
-            if (down.isDown)  body.setVelocityY(SPD)
+            if (left.isDown)  { body.setVelocityX(-SPD); this.playerDir = 'left'; moving = true }
+            if (right.isDown) { body.setVelocityX(SPD); this.playerDir = 'right'; moving = true }
+            if (up.isDown)    { body.setVelocityY(-SPD); this.playerDir = 'up'; moving = true }
+            if (down.isDown)  { body.setVelocityY(SPD); this.playerDir = 'down'; moving = true }
         }
+
+        // Walk animation
+        if (moving) {
+            this.walkTimer += delta
+            if (this.walkTimer > 200) { this.walkTimer = 0; this.playerFrame = this.playerFrame === 0 ? 1 : 0 }
+        } else { this.playerFrame = 0; this.walkTimer = 0 }
+
+        this.playerSprite.setPosition(this.player.x, this.player.y)
+        this.playerSprite.setTexture(`player_${this.playerDir}_${this.playerFrame}`)
 
         if (!this.triggered && !locked
             && this.physics.overlap(this.player as any, this.doorZone)) {

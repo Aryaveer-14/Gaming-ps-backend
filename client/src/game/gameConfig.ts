@@ -1,9 +1,17 @@
 import Phaser from 'phaser'
-import BedroomScene       from './scenes/BedroomScene'
-import HouseInteriorScene from './scenes/HouseInteriorScene'
-import OutdoorScene       from './scenes/OutdoorScene'
-import LabInteriorScene   from './scenes/LabInteriorScene'
-import RivalHouseScene    from './scenes/RivalHouseScene'
+import BootScene            from './scenes/BootScene'
+import BedroomScene         from './scenes/BedroomScene'
+import HouseInteriorScene   from './scenes/HouseInteriorScene'
+import OutdoorScene         from './scenes/OutdoorScene'
+import LabInteriorScene     from './scenes/LabInteriorScene'
+import RivalHouseScene      from './scenes/RivalHouseScene'
+import Route1Scene          from './scenes/Route1Scene'
+import ViridianCityScene    from './scenes/ViridianCityScene'
+import LegendaryCaveScene   from './scenes/LegendaryCaveScene'
+import PokeCenterScene      from './scenes/PokeCenterScene'
+import PokeMartScene        from './scenes/PokeMartScene'
+import WildEncounterScene   from './scenes/WildEncounterScene'
+import TrainerBattleScene   from './scenes/TrainerBattleScene'
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -24,10 +32,18 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
         parent:     'phaser-container',
     },
     scene: [
+        BootScene,          // generates all pixel-art textures first
         BedroomScene,
         HouseInteriorScene,
         OutdoorScene,
         LabInteriorScene,
         RivalHouseScene,
+        Route1Scene,
+        ViridianCityScene,
+        LegendaryCaveScene,
+        PokeCenterScene,
+        PokeMartScene,
+        WildEncounterScene,
+        TrainerBattleScene,
     ],
 }

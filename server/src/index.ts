@@ -5,14 +5,16 @@ import http from 'http'
 import { Server } from 'socket.io'
 import authRouter    from './routes/auth'
 import storyRouter   from './routes/story'
-import starterRouter from './routes/starter'
+import starterRoutes    from './routes/starter'
+import inventoryRoutes  from './routes/inventory'
+import partyRoutes      from './routes/party'
 import { registerBattleNamespace }    from './namespaces/battle'
 import { registerOverworldNamespace } from './namespaces/overworld'
 
 const app = express()
 const httpServer = http.createServer(app)
 
-// Allow both Vite ports (5173 and 5174) since Vite auto-increments
+// Allow LAN + localhost origins for multiplayer testing
 const ALLOWED_ORIGINS = [
     process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
     'http://localhost:5173',
@@ -22,15 +24,15 @@ const ALLOWED_ORIGINS = [
 ]
 
 const io = new Server(httpServer, {
-    cors: { origin: ALLOWED_ORIGINS, credentials: true },
+    cors: {
+        origin: (_origin, cb) => cb(null, true),
+        credentials: true,
+    },
 })
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({
-    origin: (origin, cb) => {
-        if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true)
-        cb(new Error(`CORS blocked: ${origin}`))
-    },
+    origin: (_origin, cb) => cb(null, true),
     credentials: true,
 }))
 app.use(express.json())
@@ -38,8 +40,9 @@ app.use(express.json())
 // ─── REST Routes ──────────────────────────────────────────────────────────────
 app.use('/auth',    authRouter)
 app.use('/story',   storyRouter)
-app.use('/starter', starterRouter)
-
+app.use('/starter', starterRoutes)
+app.use('/inventory', inventoryRoutes)
+app.use('/party', partyRoutes)
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
@@ -50,8 +53,8 @@ registerBattleNamespace(io)
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = Number(process.env.PORT ?? 3001)
-httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`)
+httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT} (LAN accessible)`)
     console.log(`📡 Namespaces: /overworld, /battle`)
 })
 

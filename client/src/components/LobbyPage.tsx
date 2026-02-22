@@ -4,7 +4,7 @@ import { useBattleStore } from '../store/battleStore'
 import { getBattleSocket } from '../lib/battleSocket'
 import BattleUI from './BattleUI'
 
-export default function LobbyPage() {
+export default function LobbyPage({ onEnterCave, onEnterOverworld }: { onEnterCave?: () => void; onEnterOverworld?: () => void }) {
     const { token, username, logout } = useAuthStore()
     const { phase } = useBattleStore()
     const [targetUserId, setTargetUserId] = useState('')
@@ -48,6 +48,30 @@ export default function LobbyPage() {
                             <span className="text-xs text-gray-400">Online</span>
                         </div>
                     </div>
+                    {onEnterOverworld && (
+                        <button
+                            id="btn-enter-overworld"
+                            onClick={onEnterOverworld}
+                            className="text-xs font-mono text-blue-400 hover:text-blue-200
+                                bg-blue-950/60 hover:bg-blue-900/60 border border-blue-700/60
+                                hover:border-blue-500 rounded-lg px-3 py-1.5 transition-all
+                                shadow-lg shadow-blue-900/30"
+                        >
+                            🗺️ Explore Town
+                        </button>
+                    )}
+                    {onEnterCave && (
+                        <button
+                            id="btn-enter-cave"
+                            onClick={onEnterCave}
+                            className="text-xs font-mono text-purple-400 hover:text-purple-200
+                                bg-purple-950/60 hover:bg-purple-900/60 border border-purple-700/60
+                                hover:border-purple-500 rounded-lg px-3 py-1.5 transition-all
+                                shadow-lg shadow-purple-900/30"
+                        >
+                            🕳️ Legendary Cave
+                        </button>
+                    )}
                     <button
                         id="btn-logout"
                         onClick={logout}

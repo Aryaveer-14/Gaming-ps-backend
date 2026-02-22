@@ -20,6 +20,7 @@ export class DialogueSystem {
     private arrow!:   Phaser.GameObjects.Text
     private timer:    Phaser.Time.TimerEvent | null = null
     private lines:    string[] = []
+    private speakers: string[] = []
     private cursor    = 0
     private _active   = false
     private onDone:   (() => void) | null = null
@@ -88,11 +89,28 @@ export class DialogueSystem {
 
     show(lines: string[], speaker = '', onDone?: () => void) {
         this.lines    = lines
+        this.speakers = lines.map(() => speaker)
         this.cursor   = 0
         this.onDone   = onDone ?? null
         this._active  = true
         this.cooldown = 300  // 300ms grace on open to prevent first-click dismissal
         this.nameTag.setText(speaker ? ` ${speaker} ` : '').setVisible(!!speaker)
+        this.box.setVisible(true)
+        this.border.setVisible(true)
+        this.arrow.setVisible(false)
+        this.showLine()
+    }
+
+    /** Show a dialogue sequence with per-line speaker names */
+    showSequence(entries: { speaker: string; text: string }[], onDone?: () => void) {
+        this.lines    = entries.map(e => e.text)
+        this.speakers = entries.map(e => e.speaker)
+        this.cursor   = 0
+        this.onDone   = onDone ?? null
+        this._active  = true
+        this.cooldown = 300
+        const sp = this.speakers[0]
+        this.nameTag.setText(sp ? ` ${sp} ` : '').setVisible(!!sp)
         this.box.setVisible(true)
         this.border.setVisible(true)
         this.arrow.setVisible(false)
@@ -120,6 +138,9 @@ export class DialogueSystem {
 
         this.cursor++
         if (this.cursor < this.lines.length) {
+            // Update speaker name if it changed
+            const sp = this.speakers[this.cursor] ?? ''
+            this.nameTag.setText(sp ? ` ${sp} ` : '').setVisible(!!sp)
             this.showLine()
         } else {
             this.close()
